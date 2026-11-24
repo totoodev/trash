@@ -1,0 +1,17 @@
+[package]
+name = "trash-pro"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Move files and folders to the OS trash/recycle bin, with a temp-directory fallback for systems without one"
+
+[lib]
+name = "trash_pro"
+
+[[bin]]
+name = "trash-pro"
+path = "src/bin/trash-pro.rs"
+
+[dependencies]
+trash.workspace = true

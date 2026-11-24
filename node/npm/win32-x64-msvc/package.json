@@ -1,0 +1,32 @@
+{
+  "name": "trash-pro-win32-x64-msvc",
+  "version": "0.1.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "trash-pro.win32-x64-msvc.node",
+  "files": [
+    "trash-pro.win32-x64-msvc.node"
+  ],
+  "description": "Move files and folders to the OS trash/recycle bin (macOS, Windows, Linux), with a temp-directory fallback for headless systems. Batch-capable, built on trash-rs + napi-rs.",
+  "keywords": [
+    "trash",
+    "recycle-bin",
+    "wastebasket",
+    "delete",
+    "remove",
+    "napi-rs",
+    "node-rs"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "os": [
+    "win32"
+  ]
+}
