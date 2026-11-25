@@ -1,3 +1,3 @@
-# `trash-pro-win32-x64-msvc`
+# `@totoodev/trash-win32-x64-msvc`
 
-This is the **x86_64-pc-windows-msvc** binary for `trash-pro`
+This is the **x86_64-pc-windows-msvc** binary for `@totoodev/trash`

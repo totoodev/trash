@@ -1,3 +1,3 @@
-# `trash-pro-linux-x64-musl`
+# `@totoodev/trash-linux-x64-musl`
 
-This is the **x86_64-unknown-linux-musl** binary for `trash-pro`
+This is the **x86_64-unknown-linux-musl** binary for `@totoodev/trash`

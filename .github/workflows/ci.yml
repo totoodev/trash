@@ -1,108 +1,236 @@
-name: CI
+# Multi-platform build & npm publish for the Node.js binding.
+#
+# - Every push / PR builds all eight targets and runs the smoke test on the
+#   runner's own architecture.
+# - Linux gnu targets are built with cargo-zigbuild with an explicit glibc
+#   baseline (`<triple>.2.17`), so the artifacts run on glibc >= 2.17
+#   (CentOS 7+ / Ubuntu 16.04+, and 信创 distros such as Kylin V10 / UOS V20
+#   with glibc 2.28; independent of runner image glibc). Without the version
+#   suffix zig links against recent glibc stubs and the binary picks up
+#   GLIBC_2.29+ symbol versions which fail to load on older glibc.
+# - Linux musl targets (Alpine containers) are built with cargo-zigbuild
+#   without a glibc suffix.
+# - Pushing a tag `v*` publishes the platform packages + the root package to
+#   npm. First release needs the repository secret NPM_TOKEN (new packages
+#   cannot use Trusted Publishing before they exist on npm); afterwards unset
+#   the secret and publishing falls back to npm Trusted Publishing (OIDC).
+name: Build & Publish
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    tags: ["v*"]
   pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: node/package-lock.json
-      - name: Rust tests
-        run: cargo test
-      - name: Build addon
-        run: npm run build
-        working-directory: node
-      - name: Node tests
-        run: npm test
-        working-directory: node
-
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-apple-darwin
-            os: macos-13
-          - target: aarch64-apple-darwin
-            os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-          - target: aarch64-pc-windows-msvc
-            os: windows-latest
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-            cross: true
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: node/package-lock.json
-      - name: Build addon
-        run: npx napi build --release --platform --target ${{ matrix.target }} ${{ matrix.cross && '--use-napi-cross' || '' }}
-        working-directory: node
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bindings-${{ matrix.target }}
-          path: node/*.node
-          if-no-files-found: error
-
-  publish:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [test, build]
+  rust-test:
+    name: Rust tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --workspace
+
+  build:
+    name: ${{ matrix.settings.target }}
+    runs-on: ${{ matrix.settings.host }}
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: trash.win32-x64-msvc.node
+            build: napi
+            smoke: true
+          - host: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            artifact: trash.win32-arm64-msvc.node
+            build: napi
+            smoke: true
+          - host: macos-latest
+            target: aarch64-apple-darwin
+            artifact: trash.darwin-arm64.node
+            build: napi
+            smoke: true
+          - host: macos-latest
+            target: x86_64-apple-darwin
+            artifact: trash.darwin-x64.node
+            build: napi
+            smoke: false # cross-built on an arm64 runner
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: trash.linux-x64-gnu.node
+            build: zig
+            smoke: true
+          - host: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            artifact: trash.linux-arm64-gnu.node
+            build: zig
+            smoke: true
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            artifact: trash.linux-x64-musl.node
+            build: zig-musl
+            smoke: false # musl-linked; not loadable by the runner's gnu Node
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            artifact: trash.linux-arm64-musl.node
+            build: zig-musl
+            smoke: false # cross-built on an x64 runner
+    defaults:
+      run:
+        working-directory: node
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-      - name: Download all bindings
+          node-version: 20
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.settings.target }}
+
+      # The binding has no runtime npm dependencies, so the build jobs skip
+      # `npm ci`: the optionalDependencies are our own platform packages,
+      # which no lockfile can resolve before the first release. Only the napi
+      # CLI is needed to build the win/mac targets.
+      - name: Install @napi-rs/cli
+        if: matrix.settings.build == 'napi'
+        run: npm install -g @napi-rs/cli@3.11.1
+
+      # Windows / macOS: plain napi build (Apple x64<->arm64 cross-compiles
+      # with just the rustup target installed).
+      - name: Build (napi)
+        if: matrix.settings.build == 'napi'
+        run: napi build --platform --release --target ${{ matrix.settings.target }}
+
+      # Linux: cargo-zigbuild (glibc baseline for gnu, plain for musl).
+      - name: Install cargo-zigbuild
+        if: matrix.settings.build == 'zig' || matrix.settings.build == 'zig-musl'
+        run: |
+          python3 -m pip install ziglang
+          cargo install cargo-zigbuild --locked
+
+      - name: Build (cargo-zigbuild, glibc 2.17 baseline)
+        if: matrix.settings.build == 'zig'
+        run: |
+          cargo zigbuild --target ${{ matrix.settings.target }}.2.17 -p trash-pro-node --release --manifest-path ../../Cargo.toml
+          cp ../../target/${{ matrix.settings.target }}/release/libtrash_pro_node.so ${{ matrix.settings.artifact }}
+
+      - name: Build (cargo-zigbuild, musl)
+        if: matrix.settings.build == 'zig-musl'
+        run: |
+          cargo zigbuild --target ${{ matrix.settings.target }} -p trash-pro-node --release --manifest-path ../../Cargo.toml
+          cp ../../target/${{ matrix.settings.target }}/release/libtrash_pro_node.so ${{ matrix.settings.artifact }}
+
+      # Guard against glibc-requirement regressions: the artifact must not
+      # reference any symbol version newer than GLIBC_2.28.
+      - name: Check glibc symbol versions
+        if: matrix.settings.build == 'zig'
+        run: |
+          max=$(strings ${{ matrix.settings.artifact }} | grep -oE 'GLIBC_[0-9.]+' | sort -uV | tail -1)
+          echo "max GLIBC symbol version referenced: $max"
+          if [ "$(printf '%s\n' "$max" GLIBC_2.28 | sort -V | tail -1)" != "GLIBC_2.28" ]; then
+            echo "::error::artifact requires $max > GLIBC_2.28 — will not load on glibc 2.28 (信创 Kylin/UOS)"
+            exit 1
+          fi
+
+      - name: Smoke test
+        if: matrix.settings.smoke
+        run: node --test test/trash.test.mjs
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binding-${{ matrix.settings.target }}
+          path: node/${{ matrix.settings.artifact }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish to npm
+    needs: [rust-test, build]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write # create the GitHub Release for the tag
+      id-token: write # npm Trusted Publishing (OIDC) — no token needed
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    defaults:
+      run:
+        working-directory: node
+    steps:
+      - uses: actions/checkout@v4
+
+      # Trusted Publishing requires npm >= 11.5.1 (bundled with Node 24).
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Download all binding artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
-      - name: Move bindings into the package
-        run: npx @napi-rs/cli artifacts --npm-dir node/npm --build-output-dir node artifacts
-      - name: Fill per-platform packages
-        run: npx @napi-rs/cli pre-publish --npm-dir node/npm
-      - name: Publish per-platform packages
+
+      # The publish job only needs the napi CLI. Installing the project's
+      # dependency tree via `npm ci` would fail: the optionalDependencies are
+      # our own not-yet-published platform packages, which no lockfile can
+      # resolve before the first release.
+      - name: Install @napi-rs/cli
+        run: npm install -g @napi-rs/cli@3.11.1
+
+      - name: Prepare platform packages
         run: |
-          for dir in node/npm/*/; do
-            (cd "$dir" && npm publish --access public)
+          napi create-npm-dirs
+          napi artifacts --output-dir "$GITHUB_WORKSPACE/artifacts" --npm-dir ./npm
+          # --tag-style npm: take the release version from the v* tag
+          # (the default "lerna" style parses release-commit messages instead).
+          napi pre-publish --skip-optional-publish --tag-style npm
+          # Trusted Publishing verifies that repository.url matches the GitHub
+          # repo; enforce it on every manifest in case tooling rewrote them.
+          node -e '
+            const fs = require("fs");
+            const repo = { type: "git", url: "git+https://github.com/totoodev/trash-pro.git" };
+            for (const f of ["package.json", ...fs.readdirSync("npm").map(d => "npm/" + d + "/package.json")]) {
+              const j = JSON.parse(fs.readFileSync(f, "utf8"));
+              j.repository = repo;
+              fs.writeFileSync(f, JSON.stringify(j, null, 2) + "\n");
+            }
+          '
+
+      - name: Publish platform packages
+        run: |
+          # Dual-mode auth: a configured NPM_TOKEN is used for the very first
+          # release (new packages cannot use Trusted Publishing before they
+          # exist on npm); afterwards unset the secret and publishing falls
+          # back to OIDC Trusted Publishing automatically.
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          fi
+          for d in npm/*/; do
+            echo "publishing $d"
+            npm publish "$d" --access public
           done
+          rm -f .npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Publish main package
-        run: npm publish --access public
-        working-directory: node
+
+      - name: Publish root package
+        run: |
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          fi
+          npm publish --access public
+          rm -f .npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

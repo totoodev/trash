@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, describe, it } from 'node:test'
 
-import { trash, trashSync } from '../index.js'
+import { list, restore, restoreSync, trash, trashSync } from '../index.js'
 
 const scratch = mkdtempSync(join(tmpdir(), 'trash-pro-node-test-'))
 const fallback = join(scratch, 'fallback')
@@ -113,5 +113,64 @@ describe('edge cases', () => {
     assert.equal(typeof mod.trash, 'function')
     assert.equal(typeof mod.trashSync, 'function')
     assert.equal(mod.trashSync, trashSync)
+  })
+})
+
+describe('recovery', () => {
+  it('lists fallback items with their original paths', () => {
+    const src = makeFile('recover-src/remember.txt', 'R')
+    const destRoot = join(scratch, 'dest-list')
+
+    trashSync([src], { forceTemp: true, tempDir: destRoot })
+
+    const items = list(destRoot)
+    assert.equal(items.length, 1)
+    assert.equal(items[0].item, join(destRoot, 'remember.txt'))
+    assert.equal(items[0].originalPath, src)
+    assert.equal(items[0].kind, 'file')
+    assert.ok(items[0].deletedAt.length > 0)
+  })
+
+  it('restores items back to their original paths (async)', async () => {
+    const src = makeFile('recover-back.txt', 'payload')
+    const destRoot = join(scratch, 'dest-restore')
+
+    const [moved] = trashSync([src], { forceTemp: true, tempDir: destRoot })
+    assert.equal(existsSync(src), false)
+
+    const [result] = await restore([moved.destination])
+    assert.equal(result.ok, true)
+    assert.equal(result.restoredTo, src)
+    assert.equal(readFileSync(src, 'utf8'), 'payload')
+    assert.equal(existsSync(moved.destination), false)
+    assert.equal(list(destRoot).length, 0)
+  })
+
+  it('restore reports conflicts and honors overwrite (sync)', () => {
+    const src = makeFile('recover-conflict.txt', 'original')
+    const destRoot = join(scratch, 'dest-conflict')
+
+    const [moved] = trashSync([src], { forceTemp: true, tempDir: destRoot })
+    writeFileSync(src, 'new occupant')
+
+    const [conflict] = restoreSync([moved.destination])
+    assert.equal(conflict.ok, false)
+    assert.match(conflict.error, /occupied/)
+    assert.equal(readFileSync(src, 'utf8'), 'new occupant')
+
+    const [overwritten] = restoreSync([moved.destination], { overwrite: true })
+    assert.equal(overwritten.ok, true)
+    assert.equal(readFileSync(src, 'utf8'), 'original')
+  })
+
+  it('rejects items without a provenance record', () => {
+    const destRoot = join(scratch, 'dest-unmanaged')
+    mkdirSync(destRoot, { recursive: true })
+    const foreign = join(destRoot, 'not-ours.txt')
+    writeFileSync(foreign, '?')
+
+    const [result] = restoreSync([foreign])
+    assert.equal(result.ok, false)
+    assert.match(result.error, /no trash-pro provenance record/)
   })
 })

@@ -87,13 +87,13 @@ function requireNative() {
   } else if (process.platform === 'android') {
     if (process.arch === 'arm64') {
       try {
-        return require('./trash-pro.android-arm64.node')
+        return require('./trash.android-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-android-arm64')
-        const bindingPackageVersion = require('trash-pro-android-arm64/package.json').version
+        const binding = require('@totoodev/trash-android-arm64')
+        const bindingPackageVersion = require('@totoodev/trash-android-arm64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -103,13 +103,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./trash-pro.android-arm-eabi.node')
+        return require('./trash.android-arm-eabi.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-android-arm-eabi')
-        const bindingPackageVersion = require('trash-pro-android-arm-eabi/package.json').version
+        const binding = require('@totoodev/trash-android-arm-eabi')
+        const bindingPackageVersion = require('@totoodev/trash-android-arm-eabi/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -124,13 +124,13 @@ function requireNative() {
     if (process.arch === 'x64') {
       if ((process.config && process.config.variables && process.config.variables.shlib_suffix === 'dll.a') || (process.config && process.config.variables && process.config.variables.node_target_type === 'shared_library')) {
         try {
-          return require('./trash-pro.win32-x64-gnu.node')
+          return require('./trash.win32-x64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-win32-x64-gnu')
-          const bindingPackageVersion = require('trash-pro-win32-x64-gnu/package.json').version
+          const binding = require('@totoodev/trash-win32-x64-gnu')
+          const bindingPackageVersion = require('@totoodev/trash-win32-x64-gnu/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -140,13 +140,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./trash-pro.win32-x64-msvc.node')
+          return require('./trash.win32-x64-msvc.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-win32-x64-msvc')
-          const bindingPackageVersion = require('trash-pro-win32-x64-msvc/package.json').version
+          const binding = require('@totoodev/trash-win32-x64-msvc')
+          const bindingPackageVersion = require('@totoodev/trash-win32-x64-msvc/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -157,13 +157,13 @@ function requireNative() {
       }
     } else if (process.arch === 'ia32') {
       try {
-        return require('./trash-pro.win32-ia32-msvc.node')
+        return require('./trash.win32-ia32-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-win32-ia32-msvc')
-        const bindingPackageVersion = require('trash-pro-win32-ia32-msvc/package.json').version
+        const binding = require('@totoodev/trash-win32-ia32-msvc')
+        const bindingPackageVersion = require('@totoodev/trash-win32-ia32-msvc/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -173,13 +173,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./trash-pro.win32-arm64-msvc.node')
+        return require('./trash.win32-arm64-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-win32-arm64-msvc')
-        const bindingPackageVersion = require('trash-pro-win32-arm64-msvc/package.json').version
+        const binding = require('@totoodev/trash-win32-arm64-msvc')
+        const bindingPackageVersion = require('@totoodev/trash-win32-arm64-msvc/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -192,13 +192,13 @@ function requireNative() {
     }
   } else if (process.platform === 'darwin') {
     try {
-      return require('./trash-pro.darwin-universal.node')
+      return require('./trash.darwin-universal.node')
     } catch (e) {
       loadErrors.push(e)
     }
     try {
-      const binding = require('trash-pro-darwin-universal')
-      const bindingPackageVersion = require('trash-pro-darwin-universal/package.json').version
+      const binding = require('@totoodev/trash-darwin-universal')
+      const bindingPackageVersion = require('@totoodev/trash-darwin-universal/package.json').version
       if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
         throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
       }
@@ -208,13 +208,13 @@ function requireNative() {
     }
     if (process.arch === 'x64') {
       try {
-        return require('./trash-pro.darwin-x64.node')
+        return require('./trash.darwin-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-darwin-x64')
-        const bindingPackageVersion = require('trash-pro-darwin-x64/package.json').version
+        const binding = require('@totoodev/trash-darwin-x64')
+        const bindingPackageVersion = require('@totoodev/trash-darwin-x64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -224,13 +224,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./trash-pro.darwin-arm64.node')
+        return require('./trash.darwin-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-darwin-arm64')
-        const bindingPackageVersion = require('trash-pro-darwin-arm64/package.json').version
+        const binding = require('@totoodev/trash-darwin-arm64')
+        const bindingPackageVersion = require('@totoodev/trash-darwin-arm64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -244,13 +244,13 @@ function requireNative() {
   } else if (process.platform === 'freebsd') {
     if (process.arch === 'x64') {
       try {
-        return require('./trash-pro.freebsd-x64.node')
+        return require('./trash.freebsd-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-freebsd-x64')
-        const bindingPackageVersion = require('trash-pro-freebsd-x64/package.json').version
+        const binding = require('@totoodev/trash-freebsd-x64')
+        const bindingPackageVersion = require('@totoodev/trash-freebsd-x64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -260,13 +260,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./trash-pro.freebsd-arm64.node')
+        return require('./trash.freebsd-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-freebsd-arm64')
-        const bindingPackageVersion = require('trash-pro-freebsd-arm64/package.json').version
+        const binding = require('@totoodev/trash-freebsd-arm64')
+        const bindingPackageVersion = require('@totoodev/trash-freebsd-arm64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -276,13 +276,13 @@ function requireNative() {
       }
     } else if (process.arch === 'ppc64') {
       try {
-        return require('./trash-pro.freebsd-ppc64.node')
+        return require('./trash.freebsd-ppc64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-freebsd-ppc64')
-        const bindingPackageVersion = require('trash-pro-freebsd-ppc64/package.json').version
+        const binding = require('@totoodev/trash-freebsd-ppc64')
+        const bindingPackageVersion = require('@totoodev/trash-freebsd-ppc64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -297,13 +297,13 @@ function requireNative() {
     if (process.arch === 'x64') {
       if (isMusl()) {
         try {
-          return require('./trash-pro.linux-x64-musl.node')
+          return require('./trash.linux-x64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-x64-musl')
-          const bindingPackageVersion = require('trash-pro-linux-x64-musl/package.json').version
+          const binding = require('@totoodev/trash-linux-x64-musl')
+          const bindingPackageVersion = require('@totoodev/trash-linux-x64-musl/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -313,13 +313,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./trash-pro.linux-x64-gnu.node')
+          return require('./trash.linux-x64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-x64-gnu')
-          const bindingPackageVersion = require('trash-pro-linux-x64-gnu/package.json').version
+          const binding = require('@totoodev/trash-linux-x64-gnu')
+          const bindingPackageVersion = require('@totoodev/trash-linux-x64-gnu/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -331,13 +331,13 @@ function requireNative() {
     } else if (process.arch === 'arm64') {
       if (isMusl()) {
         try {
-          return require('./trash-pro.linux-arm64-musl.node')
+          return require('./trash.linux-arm64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-arm64-musl')
-          const bindingPackageVersion = require('trash-pro-linux-arm64-musl/package.json').version
+          const binding = require('@totoodev/trash-linux-arm64-musl')
+          const bindingPackageVersion = require('@totoodev/trash-linux-arm64-musl/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -347,13 +347,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./trash-pro.linux-arm64-gnu.node')
+          return require('./trash.linux-arm64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-arm64-gnu')
-          const bindingPackageVersion = require('trash-pro-linux-arm64-gnu/package.json').version
+          const binding = require('@totoodev/trash-linux-arm64-gnu')
+          const bindingPackageVersion = require('@totoodev/trash-linux-arm64-gnu/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -365,13 +365,13 @@ function requireNative() {
     } else if (process.arch === 'arm') {
       if (isMusl()) {
         try {
-          return require('./trash-pro.linux-arm-musleabihf.node')
+          return require('./trash.linux-arm-musleabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-arm-musleabihf')
-          const bindingPackageVersion = require('trash-pro-linux-arm-musleabihf/package.json').version
+          const binding = require('@totoodev/trash-linux-arm-musleabihf')
+          const bindingPackageVersion = require('@totoodev/trash-linux-arm-musleabihf/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -381,13 +381,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./trash-pro.linux-arm-gnueabihf.node')
+          return require('./trash.linux-arm-gnueabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-arm-gnueabihf')
-          const bindingPackageVersion = require('trash-pro-linux-arm-gnueabihf/package.json').version
+          const binding = require('@totoodev/trash-linux-arm-gnueabihf')
+          const bindingPackageVersion = require('@totoodev/trash-linux-arm-gnueabihf/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -399,13 +399,13 @@ function requireNative() {
     } else if (process.arch === 'loong64') {
       if (isMusl()) {
         try {
-          return require('./trash-pro.linux-loong64-musl.node')
+          return require('./trash.linux-loong64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-loong64-musl')
-          const bindingPackageVersion = require('trash-pro-linux-loong64-musl/package.json').version
+          const binding = require('@totoodev/trash-linux-loong64-musl')
+          const bindingPackageVersion = require('@totoodev/trash-linux-loong64-musl/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -415,13 +415,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./trash-pro.linux-loong64-gnu.node')
+          return require('./trash.linux-loong64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-loong64-gnu')
-          const bindingPackageVersion = require('trash-pro-linux-loong64-gnu/package.json').version
+          const binding = require('@totoodev/trash-linux-loong64-gnu')
+          const bindingPackageVersion = require('@totoodev/trash-linux-loong64-gnu/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -433,13 +433,13 @@ function requireNative() {
     } else if (process.arch === 'riscv64') {
       if (isMusl()) {
         try {
-          return require('./trash-pro.linux-riscv64-musl.node')
+          return require('./trash.linux-riscv64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-riscv64-musl')
-          const bindingPackageVersion = require('trash-pro-linux-riscv64-musl/package.json').version
+          const binding = require('@totoodev/trash-linux-riscv64-musl')
+          const bindingPackageVersion = require('@totoodev/trash-linux-riscv64-musl/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -449,13 +449,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./trash-pro.linux-riscv64-gnu.node')
+          return require('./trash.linux-riscv64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('trash-pro-linux-riscv64-gnu')
-          const bindingPackageVersion = require('trash-pro-linux-riscv64-gnu/package.json').version
+          const binding = require('@totoodev/trash-linux-riscv64-gnu')
+          const bindingPackageVersion = require('@totoodev/trash-linux-riscv64-gnu/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -466,13 +466,13 @@ function requireNative() {
       }
     } else if (process.arch === 'ppc64') {
       try {
-        return require('./trash-pro.linux-ppc64-gnu.node')
+        return require('./trash.linux-ppc64-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-linux-ppc64-gnu')
-        const bindingPackageVersion = require('trash-pro-linux-ppc64-gnu/package.json').version
+        const binding = require('@totoodev/trash-linux-ppc64-gnu')
+        const bindingPackageVersion = require('@totoodev/trash-linux-ppc64-gnu/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -482,13 +482,13 @@ function requireNative() {
       }
     } else if (process.arch === 's390x') {
       try {
-        return require('./trash-pro.linux-s390x-gnu.node')
+        return require('./trash.linux-s390x-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-linux-s390x-gnu')
-        const bindingPackageVersion = require('trash-pro-linux-s390x-gnu/package.json').version
+        const binding = require('@totoodev/trash-linux-s390x-gnu')
+        const bindingPackageVersion = require('@totoodev/trash-linux-s390x-gnu/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -502,13 +502,13 @@ function requireNative() {
   } else if (process.platform === 'openharmony') {
     if (process.arch === 'arm64') {
       try {
-        return require('./trash-pro.openharmony-arm64.node')
+        return require('./trash.openharmony-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-openharmony-arm64')
-        const bindingPackageVersion = require('trash-pro-openharmony-arm64/package.json').version
+        const binding = require('@totoodev/trash-openharmony-arm64')
+        const bindingPackageVersion = require('@totoodev/trash-openharmony-arm64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -518,13 +518,13 @@ function requireNative() {
       }
     } else if (process.arch === 'x64') {
       try {
-        return require('./trash-pro.openharmony-x64.node')
+        return require('./trash.openharmony-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-openharmony-x64')
-        const bindingPackageVersion = require('trash-pro-openharmony-x64/package.json').version
+        const binding = require('@totoodev/trash-openharmony-x64')
+        const bindingPackageVersion = require('@totoodev/trash-openharmony-x64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -534,13 +534,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./trash-pro.openharmony-arm.node')
+        return require('./trash.openharmony-arm.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('trash-pro-openharmony-arm')
-        const bindingPackageVersion = require('trash-pro-openharmony-arm/package.json').version
+        const binding = require('@totoodev/trash-openharmony-arm')
+        const bindingPackageVersion = require('@totoodev/trash-openharmony-arm/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -657,10 +657,10 @@ if (!nativeBinding || forceWasi) {
     let candidateError = null
     let candidateFailed = false
     try {
-      candidateError = __napiWasiResolveCandidate('./trash-pro.wasi.cjs', false, ['./trash-pro.wasm32-wasi.debug.wasm', './trash-pro.wasm32-wasi.wasm'])
+      candidateError = __napiWasiResolveCandidate('./trash.wasi.cjs', false, ['./trash.wasm32-wasi.debug.wasm', './trash.wasm32-wasi.wasm'])
       candidateFailed = candidateError !== null
       if (!candidateFailed) {
-        wasiBinding = require('./trash-pro.wasi.cjs')
+        wasiBinding = require('./trash.wasi.cjs')
         nativeBinding = wasiBinding
         __napiLoadedBindingTarget = 'wasm32-wasi'
         wasiBindingLoaded = true
@@ -678,16 +678,16 @@ if (!nativeBinding || forceWasi) {
     let candidateError = null
     let candidateFailed = false
     try {
-      candidateError = __napiWasiResolveCandidate('trash-pro-wasm32-wasi', true, undefined)
+      candidateError = __napiWasiResolveCandidate('@totoodev/trash-wasm32-wasi', true, undefined)
       candidateFailed = candidateError !== null
       if (!candidateFailed) {
         if (process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
-          const bindingPackageVersion = require('trash-pro-wasm32-wasi/package.json').version
+          const bindingPackageVersion = require('@totoodev/trash-wasm32-wasi/package.json').version
           if (bindingPackageVersion !== '0.1.0') {
             throw new Error(`WASI binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
         }
-        wasiBinding = require('trash-pro-wasm32-wasi')
+        wasiBinding = require('@totoodev/trash-wasm32-wasi')
         nativeBinding = wasiBinding
         __napiLoadedBindingTarget = 'wasm32-wasi'
         wasiBindingLoaded = true
@@ -835,5 +835,8 @@ function __napiStampBindingTarget(exportsObject, target) {
 // linked import resolves to `undefined`.
 module.exports.__napiBindingTarget = __napiStampBindingTarget(nativeBinding, __napiLoadedBindingTarget)
 module.exports = nativeBinding
+module.exports.list = nativeBinding.list
+module.exports.restore = nativeBinding.restore
+module.exports.restoreSync = nativeBinding.restoreSync
 module.exports.trash = nativeBinding.trash
 module.exports.trashSync = nativeBinding.trashSync

@@ -1,12 +1,12 @@
 {
-  "name": "trash-pro-linux-arm64-gnu",
+  "name": "@totoodev/trash-linux-arm64-gnu",
   "version": "0.1.0",
   "cpu": [
     "arm64"
   ],
-  "main": "trash-pro.linux-arm64-gnu.node",
+  "main": "trash.linux-arm64-gnu.node",
   "files": [
-    "trash-pro.linux-arm64-gnu.node"
+    "trash.linux-arm64-gnu.node"
   ],
   "description": "Move files and folders to the OS trash/recycle bin (macOS, Windows, Linux), with a temp-directory fallback for headless systems. Batch-capable, built on trash-rs + napi-rs.",
   "keywords": [
@@ -21,6 +21,10 @@
   "license": "MIT",
   "engines": {
     "node": ">= 10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/totoodev/trash-pro.git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

@@ -1,5 +1,5 @@
 {
-  "name": "trash-pro",
+  "name": "@totoodev/trash",
   "version": "0.1.0",
   "description": "Move files and folders to the OS trash/recycle bin (macOS, Windows, Linux), with a temp-directory fallback for headless systems. Batch-capable, built on trash-rs + napi-rs.",
   "main": "index.js",
@@ -25,8 +25,13 @@
     "index.js",
     "index.d.ts"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/totoodev/trash-pro.git"
+  },
   "napi": {
-    "binaryName": "trash-pro",
+    "binaryName": "trash",
+    "packageName": "@totoodev/trash",
     "targets": [
       "x86_64-apple-darwin",
       "aarch64-apple-darwin",
@@ -42,19 +47,19 @@
     "build": "napi build --release --platform",
     "build:debug": "napi build --platform",
     "create-npm-dirs": "napi create-npm-dirs",
-    "test": "node --test 'test/**/*.test.mjs'"
+    "test": "node --test test/trash.test.mjs"
   },
   "optionalDependencies": {
-    "trash-pro-darwin-arm64": "0.1.0",
-    "trash-pro-darwin-x64": "0.1.0",
-    "trash-pro-linux-arm64-gnu": "0.1.0",
-    "trash-pro-linux-arm64-musl": "0.1.0",
-    "trash-pro-linux-x64-gnu": "0.1.0",
-    "trash-pro-linux-x64-musl": "0.1.0",
-    "trash-pro-win32-arm64-msvc": "0.1.0",
-    "trash-pro-win32-x64-msvc": "0.1.0"
+    "@totoodev/trash-darwin-arm64": "0.1.0",
+    "@totoodev/trash-darwin-x64": "0.1.0",
+    "@totoodev/trash-linux-arm64-gnu": "0.1.0",
+    "@totoodev/trash-linux-arm64-musl": "0.1.0",
+    "@totoodev/trash-linux-x64-gnu": "0.1.0",
+    "@totoodev/trash-linux-x64-musl": "0.1.0",
+    "@totoodev/trash-win32-arm64-msvc": "0.1.0",
+    "@totoodev/trash-win32-x64-msvc": "0.1.0"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.0.0"
+    "@napi-rs/cli": "^3.10.12"
   }
 }

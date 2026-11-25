@@ -10,6 +10,58 @@
 export declare const __napiBindingTarget: 'native' | 'wasm32-wasi' | 'wasm32-wasip1'
 
 /**
+ * Lists every recoverable item in the fallback directory (`tempDir`, or the
+ * system temp dir + `/trash-pro` by default) together with the path it was
+ * moved from. Items without a trash-pro provenance record are skipped.
+ */
+export declare function list(tempDir?: string | undefined | null): Array<RecoverableItemInfo>
+
+/** An item in the fallback directory that can be moved back to its origin. */
+export interface RecoverableItemInfo {
+  /** Current location inside the fallback directory. */
+  item: string
+  /** Absolute path the item was moved from. */
+  originalPath: string
+  /** When it was moved (RFC 3339, UTC). */
+  deletedAt: string
+  /** Filesystem entry kind: `"file"`, `"directory"` or `"symlink"`. */
+  kind: string
+}
+
+/**
+ * Moves fallback items back to the paths they were moved from. Resolves on
+ * a worker thread (non-blocking for the JS event loop).
+ */
+export declare function restore(items: Array<string>, options?: RestoreOptions | undefined | null): Promise<Array<RestoreItemResult>>
+
+/** Per-item result of a restore operation. */
+export interface RestoreItemResult {
+  /** The fallback item this result belongs to. */
+  item: string
+  /** Whether the item was moved back successfully. */
+  ok: boolean
+  /** The restored (original) path when `ok` is `true`. */
+  restoredTo?: string
+  /** Error message when `ok` is `false`. */
+  error?: string
+}
+
+/** Options for `restore` / `restoreSync`. */
+export interface RestoreOptions {
+  /**
+   * Replace whatever now occupies an item's original location.
+   * Default: `false` (the restore fails with a conflict error).
+   */
+  overwrite?: boolean
+}
+
+/**
+ * Moves fallback items back to the paths they were moved from. Runs
+ * synchronously on the calling thread.
+ */
+export declare function restoreSync(items: Array<string>, options?: RestoreOptions | undefined | null): Array<RestoreItemResult>
+
+/**
  * Moves files and folders to the OS trash/recycle bin, with an optional
  * temp-directory fallback. Resolves on a worker thread (non-blocking for
  * the JS event loop).

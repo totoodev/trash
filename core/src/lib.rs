@@ -24,6 +24,13 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+mod recovery;
+
+pub use recovery::{
+    list_recoverable, restore, restore_all, ItemKind, RecoverableItem, RestoreError,
+    RestoreOutcome,
+};
+
 /// Where an item was moved to.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Destination {
@@ -116,12 +123,17 @@ impl Default for Options {
     }
 }
 
+/// Default fallback destination: `<system temp dir>/trash-pro`.
+pub(crate) fn default_temp_root() -> PathBuf {
+    std::env::temp_dir().join("trash-pro")
+}
+
 impl Options {
     /// Resolved fallback destination directory.
     pub fn temp_root(&self) -> PathBuf {
         match &self.temp_dir {
             Some(dir) => dir.clone(),
-            None => std::env::temp_dir().join("trash-pro"),
+            None => default_temp_root(),
         }
     }
 }
@@ -301,38 +313,109 @@ fn validate_target(path: &Path) -> Result<(), Error> {
 /// Moves `path` into the fallback directory (`<temp_root>/<file name>`),
 /// de-duplicating name collisions with `.1`, `.2`, ... suffixes.
 ///
-/// Tries an atomic `rename` first and falls back to copy + delete when the
-/// source and the temp directory live on different filesystems.
+/// The destination name is *reserved atomically* before the move, so two
+/// concurrent processes moving items with the same name can never overwrite
+/// each other. A provenance sidecar (`<dest>.trashinfo.json`) is written
+/// before the move — a reported success is always recoverable via
+/// [`restore`] / [`list_recoverable`]. Tries an atomic `rename` first and
+/// falls back to copy + delete when the source and the temp directory live
+/// on different filesystems.
 fn move_to_temp(path: &Path, opts: &Options) -> io::Result<PathBuf> {
     let base = opts.temp_root();
     fs::create_dir_all(&base)?;
     let name = path
         .file_name()
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "path has no file name"))?;
-    let dest = unique_dest(&base, name);
+    let meta = fs::symlink_metadata(path)?;
+    let kind = ItemKind::of(meta.file_type());
+    let dest = reserve_unique_dest(&base, name, kind)?;
 
-    match fs::rename(path, &dest) {
-        Ok(()) => Ok(dest),
-        Err(_) => {
-            // Typically EXDEV (cross-device); copy then remove as a fallback.
-            copy_recursive(path, &dest)?;
-            remove_recursive(path)?;
-            Ok(dest)
+    if let Err(e) = recovery::write_sidecar(&dest, &absolute_path(path), kind) {
+        abandon_claim(&dest);
+        return Err(e);
+    }
+    if let Err(e) = move_into_placeholder(path, &dest, kind) {
+        abandon_claim(&dest);
+        recovery::remove_sidecar(&dest);
+        return Err(e);
+    }
+    Ok(dest)
+}
+
+/// Absolute (but not canonicalized) form of `path`, for provenance records.
+fn absolute_path(path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir()
+            .map(|cwd| cwd.join(path))
+            .unwrap_or_else(|_| path.to_path_buf())
+    }
+}
+
+/// Atomically claims `<base>/<name>` (then `<base>/<name>.1`, `.2`, ...) by
+/// creating an empty placeholder — an empty directory when the source is a
+/// directory, an empty file otherwise — and returns the claimed path.
+///
+/// Ownership is established by *creation* (`create_new` / `create_dir`), never
+/// by probing with a separate existence check, so two concurrent callers can
+/// never walk away with the same destination and overwrite each other.
+fn reserve_unique_dest(base: &Path, name: &OsStr, kind: ItemKind) -> io::Result<PathBuf> {
+    let mut n: u32 = 0;
+    loop {
+        let dest = if n == 0 {
+            base.join(name)
+        } else {
+            let mut suffixed = OsString::from(name);
+            suffixed.push(format!(".{n}"));
+            base.join(suffixed)
+        };
+        match claim_dest(&dest, kind) {
+            Ok(()) => return Ok(dest),
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {
+                n = n.checked_add(1)
+                    .ok_or_else(|| io::Error::other("too many name collisions"))?;
+            }
+            Err(e) => return Err(e),
         }
     }
 }
 
-/// `<base>/<name>`, appending `.1`, `.2`, ... while the destination exists.
-fn unique_dest(base: &Path, name: &OsStr) -> PathBuf {
-    let mut dest = base.join(name);
-    let mut n: u32 = 1;
-    while dest.symlink_metadata().is_ok() {
-        let mut suffixed = OsString::from(name);
-        suffixed.push(format!(".{n}"));
-        dest = base.join(suffixed);
-        n += 1;
+/// Creates the empty placeholder at `dest` (empty dir for directories, empty
+/// file otherwise). Fails with `AlreadyExists` when the slot is taken.
+pub(crate) fn claim_dest(dest: &Path, kind: ItemKind) -> io::Result<()> {
+    if kind.is_dir() {
+        fs::create_dir(dest)
+    } else {
+        fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(dest)
+            .map(|_| ())
     }
-    dest
+}
+
+/// Cleans up a claimed slot after a failed move (best effort). The slot may
+/// hold a partial copy, so it is removed recursively.
+pub(crate) fn abandon_claim(dest: &Path) {
+    let _ = remove_recursive(dest);
+}
+
+/// Moves `src` onto the placeholder we own at `dest`.
+pub(crate) fn move_into_placeholder(src: &Path, dest: &Path, kind: ItemKind) -> io::Result<()> {
+    match fs::rename(src, dest) {
+        Ok(()) => Ok(()),
+        Err(_) => {
+            // Typically EXDEV (cross-device): copy then remove. `fs::copy`
+            // over our placeholder file is fine, but a symlink cannot be
+            // created over an existing entry.
+            if kind == ItemKind::Symlink {
+                let _ = fs::remove_file(dest);
+            }
+            copy_recursive(src, dest)?;
+            remove_recursive(src)
+        }
+    }
 }
 
 fn copy_recursive(src: &Path, dest: &Path) -> io::Result<()> {
@@ -687,6 +770,36 @@ mod tests {
         };
         assert!(!abs.exists());
         assert_eq!(dest_path.file_name().unwrap().to_str().unwrap(), unique);
+    }
+
+    #[test]
+    fn concurrent_reservations_never_collide() {
+        use std::sync::{Arc, Barrier};
+
+        let scratch = Scratch::new();
+        let base = scratch.root.join("dest");
+        fs::create_dir_all(&base).unwrap();
+        let barrier = Arc::new(Barrier::new(8));
+
+        let handles: Vec<_> = (0..8)
+            .map(|_| {
+                let base = base.clone();
+                let barrier = Arc::clone(&barrier);
+                std::thread::spawn(move || {
+                    barrier.wait();
+                    reserve_unique_dest(&base, OsStr::new("race.txt"), ItemKind::File).unwrap()
+                })
+            })
+            .collect();
+
+        let mut dests: Vec<PathBuf> = handles.into_iter().map(|h| h.join().unwrap()).collect();
+        dests.sort();
+        let unique = dests.len();
+        dests.dedup();
+        assert_eq!(unique, 8, "every racer must get its own name: {dests:?}");
+        for d in &dests {
+            assert!(d.symlink_metadata().is_ok(), "reservation must exist: {d:?}");
+        }
     }
 
     // ---- fallback classification (injected trash backend) ----
