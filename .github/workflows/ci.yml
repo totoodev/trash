@@ -122,14 +122,16 @@ jobs:
       - name: Build (cargo-zigbuild, glibc 2.17 baseline)
         if: matrix.settings.build == 'zig'
         run: |
-          cargo zigbuild --target ${{ matrix.settings.target }}.2.17 -p trash-pro-node --release --manifest-path ../../Cargo.toml
-          cp ../../target/${{ matrix.settings.target }}/release/libtrash_pro_node.so ${{ matrix.settings.artifact }}
+          cargo zigbuild --target ${{ matrix.settings.target }}.2.17 -p trash-pro-node --release --manifest-path ../Cargo.toml
+          cp ../target/${{ matrix.settings.target }}/release/libtrash_pro_node.so ${{ matrix.settings.artifact }}
 
       - name: Build (cargo-zigbuild, musl)
         if: matrix.settings.build == 'zig-musl'
+        # -crt-static: the musl targets are static-first and reject cdylib
+        # without it; a dynamically linked musl .so is what Alpine's Node can load.
         run: |
-          cargo zigbuild --target ${{ matrix.settings.target }} -p trash-pro-node --release --manifest-path ../../Cargo.toml
-          cp ../../target/${{ matrix.settings.target }}/release/libtrash_pro_node.so ${{ matrix.settings.artifact }}
+          RUSTFLAGS="-C target-feature=-crt-static" cargo zigbuild --target ${{ matrix.settings.target }} -p trash-pro-node --release --manifest-path ../Cargo.toml
+          cp ../target/${{ matrix.settings.target }}/release/libtrash_pro_node.so ${{ matrix.settings.artifact }}
 
       # Guard against glibc-requirement regressions: the artifact must not
       # reference any symbol version newer than GLIBC_2.28.
