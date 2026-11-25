@@ -6,7 +6,7 @@ members = ["core", "node"]
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/totoodev/trash-pro"
+repository = "https://github.com/totoodev/trash"
 
 [workspace.dependencies]
 trash = "5"
